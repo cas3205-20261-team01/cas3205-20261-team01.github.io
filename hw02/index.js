@@ -1,12 +1,13 @@
-import { resizeAspectRatio, setupText, updateText } from '../util/util.js';
+import { resizeAspectRatio, setupText } from '../util/util.js';
 import { Shader, readShaderFile } from '../util/shader.js';
 
 const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
-let shader;   // shader program
-let vao;      // vertex array object
-let center = [0.0, 0.0, 0.0]; // 1.0 for normal, -1.0 for vertical flip
-let movingDirection = '';
+
+let shader;
+let vao;
+let center = [0.0, 0.0, 0.0];
+let movingDirection = null;
 
 function initWebGL() {
     if (!gl) {
@@ -40,7 +41,7 @@ function setupKeyboardEvents() {
     });
     document.addEventListener('keyup', (event) => {
         if (event.key == 'ArrowUp' || event.key == 'ArrowDown' || event.key == 'ArrowLeft' || event.key == 'ArrowRight') {
-            movingDirection = '';
+            movingDirection = null;
         }
     });
 }
@@ -94,7 +95,6 @@ function render() {
 
 async function main() {
     try {
-
         // WebGL 초기화
         if (!initWebGL()) {
             throw new Error('WebGL 초기화 실패');
