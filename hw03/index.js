@@ -14,7 +14,7 @@ let startTempPoint, endTempPoint;
 
 let circle; // [중심점, 반지름]
 let line; // [시작점, 끝점]
-let intersectionPoints; // [점1, 점2]
+let intersections; // [점1, 점2]
 
 let textOverlay, textOverlay2, textOverlay3;
 
@@ -148,8 +148,14 @@ function setupMouseEvents() {
                 updateText(textOverlay2, `Line segment: (${line[0][0].toFixed(2)}, ${line[0][1].toFixed(2)}) ~ (${line[1][0].toFixed(2)}, ${line[1][1].toFixed(2)})`);
 
                 // 교점 계산
+                intersections = getIntersections(circle[0][0], circle[0][1], circle[1], line[0][0], line[0][1], line[1][0], line[1][1]);
 
-                updateText(textOverlay3, `Intersection Points: `)
+                if (intersections.length > 0) {
+                    const intersectionText = intersections.map((intersection, index) => `Point ${index + 1}: (${intersection[0].toFixed(2)}, ${intersection[1].toFixed(2)})`).join(' ');
+                    updateText(textOverlay3, `Intersection Points: ${intersections.length} ${intersectionText}`);
+                } else {
+                    updateText(textOverlay3, 'No intersection');
+                }
                 
             }
 
@@ -166,6 +172,70 @@ function setupMouseEvents() {
     canvas.addEventListener("mouseup", handleMouseUp);
 }
 
+function getCirclePoints(center, radius) {
+    const circlePoints = [];
+    
+    for (let i = 0; i < 10000; i++) {
+        const angle = (i / 10000) * 2 * Math.PI;
+        circlePoints.push([center[0] + radius * Math.cos(angle), center[1] + radius * Math.sin(angle)]);
+    }
+
+    return circlePoints;
+}
+
+function getIntersections(cx, cy, r, x1, y1, x2, y2) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+
+    const fx = x1 - cx;
+    const fy = y1 - cy;
+
+    const a = dx * dx + dy * dy;
+    const b = 2 * (fx * dx + fy * dy);
+    const c = fx * fx + fy * fy - r * r;
+
+    const discriminant = b * b - 4 * a * c;
+
+    const intersections = [];
+
+    // 선분 길이가 0인 경우
+    if (a === 0) {
+        const distSq = (x1 - cx) * (x1 - cx) + (y1 - cy) * (y1 - cy);
+        if (distSq === r * r) {
+            return [x1, y1];
+        }
+        return [];
+    }
+
+    if (discriminant < 0) {
+        return [];
+    }
+
+    if (discriminant === 0) {
+        const t = -b / (2 * a);
+        if (t >= 0 && t <= 1) {
+            intersections.push([x1 + t * dx, y1 + t * dy]);
+        }
+
+        return intersections;
+    }
+
+    const sqrtD = Math.sqrt(discriminant);
+
+    const t1 = (-b - sqrtD) / (2 * a);
+    const t2 = (-b + sqrtD) / (2 * a);
+
+    if (t1 >= 0 && t1 <= 1) {
+        intersections.push([x1 + t1 * dx, y1 + t1 * dy]);
+    }
+
+    if (t2 >= 0 && t2 <= 1) {
+        intersections.push([x1 + t2 * dx, y1 + t2 * dy]);
+    }
+
+    return intersections;
+}
+
 function render() {
     gl.clear(gl.COLOR_BUFFER_BIT);
 
@@ -177,16 +247,11 @@ function render() {
     if (circle) {
         shader.setVec4("u_color", [1.0, 0.0, 1.0, 1.0]);
 
-        const circlePoints = [];
-        for (let i = 0; i < 1000; i++) {
-            const angle = (i / 1000) * 2 * Math.PI;
-            const radius = circle[1];
-            circlePoints.push(circle[0][0] + radius * Math.cos(angle), circle[0][1] + radius * Math.sin(angle));
-        }
+        const circlePoints = getCirclePoints(circle[0], circle[1]);
 
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints.flat()), gl.STATIC_DRAW);
         gl.bindVertexArray(vao);
-        gl.drawArrays(gl.LINES, 0, 1000);
+        gl.drawArrays(gl.LINES, 0, 10000);
     }
     
     // 선분 그리기
@@ -197,21 +262,26 @@ function render() {
         gl.drawArrays(gl.LINES, 0, 2);
     }
 
+    // 교점 그리기
+    if (intersections) {
+        shader.setVec4("u_color", [1.0, 1.0, 0.0, 1.0]);
+        
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(intersections.flat()), gl.STATIC_DRAW);
+        gl.bindVertexArray(vao);
+        gl.drawArrays(gl.POINTS, 0, intersections.length);
+    }
+
     // 임시 원/선분 그리기
     if (isDrawing && startTempPoint && endTempPoint) {
         if (!circle) {
             shader.setVec4("u_color", [0.5, 0.5, 0.5, 1.0]);
 
-            const circlePoints = [];
-            for (let i = 0; i < 1000; i++) {
-                const angle = (i / 1000) * 2 * Math.PI;
-                const radius = Math.sqrt(Math.pow(startTempPoint[0] - endTempPoint[0], 2) + Math.pow(startTempPoint[1] - endTempPoint[1], 2));
-                circlePoints.push(startTempPoint[0] + radius * Math.cos(angle), startTempPoint[1] + radius * Math.sin(angle));
-            }
+            const radius = Math.sqrt(Math.pow(startTempPoint[0] - endTempPoint[0], 2) + Math.pow(startTempPoint[1] - endTempPoint[1], 2));
+            const circlePoints = getCirclePoints(startTempPoint, radius);
 
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints), gl.STATIC_DRAW);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints.flat()), gl.STATIC_DRAW);
             gl.bindVertexArray(vao);
-            gl.drawArrays(gl.LINES, 0, 1000);
+            gl.drawArrays(gl.LINES, 0, 10000);
         } else if (!line) {
             shader.setVec4("u_color", [0.5, 0.5, 0.5, 1.0]);
 
