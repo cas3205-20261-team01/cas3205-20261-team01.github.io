@@ -6,7 +6,7 @@ const gl = canvas.getContext('webgl2');
 
 let isInitialized = false;  // main이 실행되는 순간 true로 change
 let shader;
-let vao;
+let vao; // VAO
 let positionBuffer; // VBO
 
 let isDrawing = false;
@@ -19,14 +19,6 @@ let intersectionPoints; // [점1, 점2]
 let textOverlay, textOverlay2, textOverlay3;
 
 let axes = new Axes(gl, 0.85); // x, y axes 그려주는 object (see util.js)
-
-// DOMContentLoaded event
-// 1) 모든 HTML 문서가 완전히 load되고 parsing된 후 발생
-// 2) 모든 resource (images, css, js 등) 가 완전히 load된 후 발생
-// 3) 모든 DOM 요소가 생성된 후 발생
-// DOM: Document Object Model로 HTML의 tree 구조로 표현되는 object model 
-// 모든 code를 이 listener 안에 넣는 것은 mouse click event를 원활하게 처리하기 위해서임
-// mouse input을 사용할 때 이와 같이 main을 call 한다. 
 
 document.addEventListener('DOMContentLoaded', () => {
     if (isInitialized) { // true인 경우는 main이 이미 실행되었다는 뜻이므로 다시 실행하지 않음
@@ -149,7 +141,7 @@ function setupMouseEvents() {
                 const radius = Math.sqrt(Math.pow(startTempPoint[0] - endTempPoint[0], 2) + Math.pow(startTempPoint[1] - endTempPoint[1], 2));
                 circle = [startTempPoint, radius];
 
-                updateText(textOverlay, `Circle: center (${circle[0][0].toFixed(2)}, ${circle[0][1].toFixed(2)}) radius ${circle[1].toFixed(2)}`);
+                updateText(textOverlay, `Circle: center (${circle[0][0].toFixed(2)}, ${circle[0][1].toFixed(2)}) radius = ${circle[1].toFixed(2)}`);
             } else if (!line) {
                 line = [startTempPoint, endTempPoint];
                 
