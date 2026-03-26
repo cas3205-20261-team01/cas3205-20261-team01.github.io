@@ -148,7 +148,7 @@ function setupMouseEvents() {
                 updateText(textOverlay2, `Line segment: (${line[0][0].toFixed(2)}, ${line[0][1].toFixed(2)}) ~ (${line[1][0].toFixed(2)}, ${line[1][1].toFixed(2)})`);
 
                 // 교점 계산
-                intersections = getIntersections(circle[0][0], circle[0][1], circle[1], line[0][0], line[0][1], line[1][0], line[1][1]);
+                intersections = getIntersections(circle, line);
 
                 if (intersections.length > 0) {
                     const intersectionText = intersections.map((intersection, index) => `Point ${index + 1}: (${intersection[0].toFixed(2)}, ${intersection[1].toFixed(2)})`).join(' ');
@@ -183,54 +183,60 @@ function getCirclePoints(center, radius) {
     return circlePoints;
 }
 
-function getIntersections(cx, cy, r, x1, y1, x2, y2) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
+function getIntersections(circle, line) {
+    const [center, radius] = circle;
+    const [p1, p2] = line;
 
-    const fx = x1 - cx;
-    const fy = y1 - cy;
+    const dx = p2[0] - p1[0];
+    const dy = p2[1] - p1[1];
+
+    const fx = p1[0] - center[0];
+    const fy = p1[1] - center[1];
 
     const a = dx * dx + dy * dy;
     const b = 2 * (fx * dx + fy * dy);
-    const c = fx * fx + fy * fy - r * r;
+    const c = fx * fx + fy * fy - radius * radius;
 
     const discriminant = b * b - 4 * a * c;
 
     const intersections = [];
 
-    // 선분 길이가 0인 경우
     if (a === 0) {
-        const distSq = (x1 - cx) * (x1 - cx) + (y1 - cy) * (y1 - cy);
-        if (distSq === r * r) {
-            return [x1, y1];
+        const distSq = (p1[0] - center[0]) * (p1[0] - center[0]) + (p1[1] - center[1]) * (p1[1] - center[1]);
+        if (distSq === radius * radius) {
+            return [p1[0], p1[1]];
         }
         return [];
     }
 
+    // 교점 0개
     if (discriminant < 0) {
         return [];
     }
 
+    // 교점 1개
     if (discriminant === 0) {
         const t = -b / (2 * a);
+
         if (t >= 0 && t <= 1) {
-            intersections.push([x1 + t * dx, y1 + t * dy]);
+            intersections.push([p1[0] + t * dx, p1[1] + t * dy]);
         }
 
         return intersections;
     }
 
+    // 교점 2개
     const sqrtD = Math.sqrt(discriminant);
 
     const t1 = (-b - sqrtD) / (2 * a);
     const t2 = (-b + sqrtD) / (2 * a);
 
     if (t1 >= 0 && t1 <= 1) {
-        intersections.push([x1 + t1 * dx, y1 + t1 * dy]);
+        intersections.push([p1[0] + t1 * dx, p1[1] + t1 * dy]);
     }
 
     if (t2 >= 0 && t2 <= 1) {
-        intersections.push([x1 + t2 * dx, y1 + t2 * dy]);
+        intersections.push([p1[0] + t2 * dx, p1[1] + t2 * dy]);
     }
 
     return intersections;
@@ -271,8 +277,8 @@ function render() {
         gl.drawArrays(gl.POINTS, 0, intersections.length);
     }
 
-    // 임시 원/선분 그리기
     if (isDrawing && startTempPoint && endTempPoint) {
+        // 임시 원 그리기
         if (!circle) {
             shader.setVec4("u_color", [0.5, 0.5, 0.5, 1.0]);
 
@@ -282,7 +288,9 @@ function render() {
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circlePoints.flat()), gl.STATIC_DRAW);
             gl.bindVertexArray(vao);
             gl.drawArrays(gl.LINES, 0, 10000);
-        } else if (!line) {
+        }
+        // 임시 선분 그리기
+        else if (!line) {
             shader.setVec4("u_color", [0.5, 0.5, 0.5, 1.0]);
 
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([...startTempPoint, ...endTempPoint]), gl.STATIC_DRAW);
