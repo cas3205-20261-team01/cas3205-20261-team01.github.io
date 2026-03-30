@@ -4,7 +4,7 @@ import { Shader, readShaderFile } from '../util/shader.js';
 const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 
-let isInitialized = false;  // main이 실행되는 순간 true로 change
+let isInitialized = false;
 let shader;
 let vao; // VAO
 let positionBuffer; // VBO
@@ -18,15 +18,15 @@ let intersections; // [점1, 점2]
 
 let textOverlay, textOverlay2, textOverlay3;
 
-let axes = new Axes(gl, 0.85); // x, y axes 그려주는 object (see util.js)
+let axes = new Axes(gl, 0.85);
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (isInitialized) { // true인 경우는 main이 이미 실행되었다는 뜻이므로 다시 실행하지 않음
+    if (isInitialized) {
         console.log("Already initialized");
         return;
     }
 
-    main().then(success => { // call main function
+    main().then(success => {
         if (!success) {
             console.log('프로그램을 종료합니다.');
             return;
@@ -61,61 +61,29 @@ function setupBuffers() {
     positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
-    shader.setAttribPointer('a_position', 2, gl.FLOAT, false, 0, 0); // x, y 2D 좌표
+    shader.setAttribPointer('a_position', 2, gl.FLOAT, false, 0, 0);
 
     gl.bindVertexArray(null);
 }
 
-// 좌표 변환 함수: 캔버스 좌표를 WebGL 좌표로 변환
-// 캔버스 좌표: 캔버스 좌측 상단이 (0, 0), 우측 하단이 (canvas.width, canvas.height)
-// WebGL 좌표 (NDC): 캔버스 좌측 하단이 (-1, -1), 우측 상단이 (1, 1)
 function convertToWebGLCoordinates(x, y) {
     return [
-        (x / canvas.width) * 2 - 1,  // x/canvas.width 는 0 ~ 1 사이의 값, 이것을 * 2 - 1 하면 -1 ~ 1 사이의 값
-        -((y / canvas.height) * 2 - 1) // y canvas 좌표는 상하를 뒤집어 주어야 하므로 -1을 곱함
+        (x / canvas.width) * 2 - 1,
+        -((y / canvas.height) * 2 - 1)
     ];
 }
 
-/* 
-    browser window
-    +----------------------------------------+
-    | toolbar, address bar, etc.             |
-    +----------------------------------------+
-    | browser viewport (컨텐츠 표시 영역)       | 
-    | +------------------------------------+ |
-    | |                                    | |
-    | |    canvas                          | |
-    | |    +----------------+              | |
-    | |    |                |              | |
-    | |    |      *         |              | |
-    | |    |                |              | |
-    | |    +----------------+              | |
-    | |                                    | |
-    | +------------------------------------+ |
-    +----------------------------------------+
-
-    *: mouse click position
-
-    event.clientX = browser viewport 왼쪽 경계에서 마우스 클릭 위치까지의 거리
-    event.clientY = browser viewport 상단 경계에서 마우스 클릭 위치까지의 거리
-    rect.left = browser viewport 왼쪽 경계에서 canvas 왼쪽 경계까지의 거리
-    rect.top = browser viewport 상단 경계에서 canvas 상단 경계까지의 거리
-
-    x = event.clientX - rect.left  // canvas 내에서의 클릭 x 좌표
-    y = event.clientY - rect.top   // canvas 내에서의 클릭 y 좌표
-*/
-
 function setupMouseEvents() {
     function handleMouseDown(event) {
-        event.preventDefault(); // 이미 존재할 수 있는 기본 동작을 방지
-        event.stopPropagation(); // event가 상위 요소 (div, body, html 등)으로 전파되지 않도록 방지
+        event.preventDefault();
+        event.stopPropagation();
         
         if (!startTempPoint && !endTempPoint) { 
             isDrawing = true;
 
-            const rect = canvas.getBoundingClientRect(); // canvas를 나타내는 rect 객체를 반환
-            const x = event.clientX - rect.left;  // canvas 내 x 좌표
-            const y = event.clientY - rect.top;   // canvas 내 y 좌표
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
 
             let [glX, glY] = convertToWebGLCoordinates(x, y);
             startTempPoint = [glX, glY];
@@ -316,10 +284,8 @@ async function main() {
             return false; 
         }
 
-        // 셰이더 초기화
         await initShader();
         
-        // 버퍼 초기화
         setupBuffers();
 
         shader.use();
@@ -329,7 +295,6 @@ async function main() {
         textOverlay2 = setupText(canvas, "", 2);
         textOverlay3 = setupText(canvas, "", 3);
         
-        // 마우스 이벤트 설정
         setupMouseEvents();
         
         // 초기 렌더링
