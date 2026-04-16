@@ -188,6 +188,7 @@ function initPerspective() {
 }
 
 function drawCubes(cube, modelMatrix, viewMatrix, projMatrix) {
+  shader.use();
   shader.setMat4("u_model", modelMatrix);
   shader.setMat4("u_view", viewMatrix);
   shader.setMat4("u_projection", projMatrix);
@@ -265,8 +266,6 @@ function render() {
   gl.enable(gl.SCISSOR_TEST);
   gl.enable(gl.DEPTH_TEST);
 
-  shader.use();
-
   // left viewport
   gl.scissor(0, 0, canvas.width / 2, canvas.height);
   gl.viewport(0, 0, canvas.width / 2, canvas.height);
@@ -331,7 +330,11 @@ async function main() {
       "mWASD: move | Mouse: rotate (click to lock) | ESC: unlock",
       2,
     );
-    setupText(canvas, "Left: Perspective | Right: Orthographic (Top-Down)", 3);
+    setupText(
+      canvas,
+      "Left: Perspective (FP) | Right: Orthographic (Top-Down)",
+      3,
+    );
 
     requestAnimationFrame(render);
 
