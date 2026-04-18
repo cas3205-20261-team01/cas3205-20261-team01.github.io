@@ -283,7 +283,7 @@ function render() {
   // right viewport
   gl.scissor(canvas.width / 2, 0, canvas.width / 2, canvas.height);
   gl.viewport(canvas.width / 2, 0, canvas.width / 2, canvas.height);
-  gl.clearColor(0.1, 0.1, 0.2, 1.0);
+  gl.clearColor(0.05, 0.15, 0.2, 1.0);
   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
   drawCubes(cube1, modelMatrix1, rightViewMatrix, rightProjMatrix);
@@ -327,14 +327,10 @@ async function main() {
     );
     setupText(
       canvas,
-      "mWASD: move | Mouse: rotate (click to lock) | ESC: unlock",
+      "WASD: move | Mouse: rotate (click to lock) | ESC: unlock",
       2,
     );
-    setupText(
-      canvas,
-      "Left: Perspective (FP) | Right: Orthographic (Top-Down)",
-      3,
-    );
+    setupText(canvas, "Left: Perspective | Right: Orthographic (Top-Down)", 3);
 
     requestAnimationFrame(render);
 
