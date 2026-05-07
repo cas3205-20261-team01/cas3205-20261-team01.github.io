@@ -215,6 +215,7 @@ async function main() {
       shader.setVec3("u_viewPos", cameraPos);
     });
 
+    lampShader.use();
     lampShader.setMat4("u_projection", projMatrix);
     mat4.translate(lampModelMatrix, lampModelMatrix, lightPos);
     mat4.scale(lampModelMatrix, lampModelMatrix, lightSize);
