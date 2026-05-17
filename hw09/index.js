@@ -107,7 +107,7 @@ function render() {
     shader.setMat4('u_model', modelMatrix);
     shader.setMat4('u_view', viewMatrix);
     shader.setVec3('u_viewPos', cameraPos);
-    shader.setInt('u_toonLevels', toonLevels);
+    shader.setInt('toonLevels', toonLevels);
     cylinder.draw(shader);
 
     // drawing the axes (using the axes's shader: see util.js)
@@ -153,7 +153,7 @@ async function main() {
         shader.setVec3("material.specular", vec3.fromValues(0.8, 0.8, 0.8));
         shader.setFloat("material.shininess", shininess);
         shader.setVec3("u_viewPos", cameraPos);
-        shader.setInt("u_toonLevels", toonLevels);
+        shader.setInt("toonLevels", toonLevels);
 
         // shadingMode is always smooth shading
         cylinder.copyVertexNormalsToNormals();
